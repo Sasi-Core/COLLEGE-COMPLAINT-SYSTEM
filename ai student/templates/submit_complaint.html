@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Complaint - Nandha Engineering College{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('student_dashboard') }}"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <i class="fa-solid fa-chevron-right separator"></i>
+    <span>Submit Complaint</span>
+</div>
+
+<div class="form-page-container">
+    <div class="card form-card">
+        <div class="card-header border-bottom">
+            <div class="form-header-badge">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+            <div>
+                <h1 class="card-title">Lodge a New Complaint</h1>
+                <p class="card-subtitle">Fill in the grievance details below accurately to expedite resolution.</p>
+            </div>
+        </div>
+
+        <form action="{{ url_for('submit_complaint') }}" method="POST" enctype="multipart/form-data" class="complaint-form" id="complaintSubmitForm">
+            <!-- Title -->
+            <div class="form-group">
+                <label for="title" class="form-label required">
+                    <i class="fa-solid fa-heading"></i> Complaint Title / Subject
+                </label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="Brief summary of the issue (e.g. Lab 4 AC malfunctioning)" value="{{ form_data.get('title', '') }}" required maxlength="120">
+                <small class="form-hint">Keep the title concise and clear (Max 120 characters)</small>
+            </div>
+
+            <!-- Two-column row: Category & Department -->
+            <div class="form-row">
+                <div class="form-group col-half">
+                    <label for="category" class="form-label required">
+                        <i class="fa-solid fa-tags"></i> Complaint Category
+                    </label>
+                    <select id="category" name="category" class="form-select" required>
+                        <option value="" disabled {% if not form_data.get('category') %}selected{% endif %}>Select Category</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" {% if form_data.get('category') == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group col-half">
+                    <label for="department" class="form-label required">
+                        <i class="fa-solid fa-building"></i> Concerned Department / Division
+                    </label>
+                    <select id="department" name="department" class="form-select" required>
+                        <option value="" disabled {% if not form_data.get('department') %}selected{% endif %}>Select Department</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept }}" {% if form_data.get('department') == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Priority -->
+            <div class="form-group">
+                <label class="form-label required">
+                    <i class="fa-solid fa-flag"></i> Priority Level
+                </label>
+                <div class="priority-radio-group">
+                    {% for p in priorities %}
+                        <label class="priority-label priority-{{ p|lower }}">
+                            <input type="radio" name="priority" value="{{ p }}" {% if form_data.get('priority') == p or (not form_data.get('priority') and p == 'Medium') %}checked{% endif %} required>
+                            <span class="priority-custom-box">
+                                <span class="priority-dot"></span>
+                                <strong>{{ p }}</strong>
+                                <small>
+                                    {% if p == 'Low' %}General inquiry / minor
+                                    {% elif p == 'Medium' %}Normal operational issue
+                                    {% elif p == 'High' %}Severe academic / lab block
+                                    {% elif p == 'Urgent' %}Critical hazard / safety{% endif %}
+                                </small>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Detailed Description -->
+            <div class="form-group">
+                <label for="description" class="form-label required">
+                    <i class="fa-solid fa-align-left"></i> Detailed Description
+                </label>
+                <textarea id="description" name="description" rows="5" class="form-control" placeholder="Describe the grievance thoroughly. Mention exact room numbers, equipment details, time observed, or any pertinent facts..." required>{{ form_data.get('description', '') }}</textarea>
+                <small class="form-hint">Detailed descriptions help college administrators resolve matters without back-and-forth delays.</small>
+            </div>
+
+            <!-- File Attachment -->
+            <div class="form-group">
+                <label for="attachment" class="form-label">
+                    <i class="fa-solid fa-paperclip"></i> Optional Attachment / Proof
+                </label>
+                <div class="file-upload-box" id="fileUploadBox">
+                    <input type="file" id="attachment" name="attachment" class="file-input" accept=".png,.jpg,.jpeg,.gif,.pdf,.txt,.doc,.docx" onchange="displaySelectedFile(this)">
+                    <div class="upload-placeholder" id="uploadPlaceholder">
+                        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                        <span class="upload-text">Drag and drop file here, or <strong>Browse</strong></span>
+                        <span class="upload-sub">Supports JPG, PNG, PDF, DOCX (Max 10MB)</span>
+                    </div>
+                    <div class="file-selected-info hidden" id="fileSelectedInfo">
+                        <i class="fa-solid fa-file-check file-icon"></i>
+                        <span id="selectedFileName" class="selected-name">filename.ext</span>
+                        <button type="button" class="btn-clear-file" onclick="clearSelectedFile()">&times;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-gold btn-lg">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Grievance
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

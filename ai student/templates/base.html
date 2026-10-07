@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}College Complaint System{% endblock %} - Nandha Engineering College</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons for clean UI symbols -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin_dashboard') }}{% elif session.get('role') == 'student' %}{{ url_for('student_dashboard') }}{% else %}{{ url_for('login') }}{% endif %}" class="brand-logo">
+                <div class="brand-crest">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="college-name">Nandha Engineering College</span>
+                    <span class="portal-sub">Complaint Management Portal</span>
+                </div>
+            </a>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="nav-links" id="navLinks">
+                {% if session.get('user_id') %}
+                    {% if session.get('role') == 'student' %}
+                        <a href="{{ url_for('student_dashboard') }}" class="nav-item {% if request.endpoint == 'student_dashboard' %}active{% endif %}">
+                            <i class="fa-solid fa-gauge-high"></i> Dashboard
+                        </a>
+                        <a href="{{ url_for('submit_complaint') }}" class="nav-item {% if request.endpoint == 'submit_complaint' %}active{% endif %}">
+                            <i class="fa-solid fa-circle-plus"></i> Submit Complaint
+                        </a>
+                        <a href="{{ url_for('my_complaints') }}" class="nav-item {% if request.endpoint == 'my_complaints' %}active{% endif %}">
+                            <i class="fa-solid fa-clipboard-list"></i> My Complaints
+                        </a>
+                    {% elif session.get('role') == 'admin' %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                            <i class="fa-solid fa-shield-halved"></i> Admin Console
+                        </a>
+                    {% endif %}
+
+                    <div class="user-profile-badge">
+                        <div class="user-avatar">
+                            <i class="fa-solid {% if session.get('role') == 'admin' %}fa-user-tie{% else %}fa-user-graduate{% endif %}"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">{{ session.get('name') }}</span>
+                            <span class="user-role-badge role-{{ session.get('role') }}">
+                                {% if session.get('role') == 'admin' %}
+                                    <i class="fa-solid fa-shield"></i> Admin
+                                {% else %}
+                                    <i class="fa-solid fa-id-card"></i> {{ session.get('student_id') }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <a href="{{ url_for('logout') }}" class="btn-logout" title="Sign out">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-item {% if request.endpoint == 'login' %}active{% endif %}">
+                        <i class="fa-solid fa-right-to-bracket"></i> Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} animate-fade">
+                        <div class="alert-icon">
+                            {% if category == 'success' %}
+                                <i class="fa-solid fa-circle-check"></i>
+                            {% elif category == 'danger' %}
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                            {% else %}
+                                <i class="fa-solid fa-circle-info"></i>
+                            {% endif %}
+                        </div>
+                        <div class="alert-content">{{ message }}</div>
+                        <button class="alert-close" onclick="this.parentElement.remove();">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% if not_found_error %}
+            <div class="card text-center error-page-card">
+                <div class="error-code">404</div>
+                <h2>Page Not Found</h2>
+                <p>The requested page could not be located on the Nandha Engineering College Complaint Portal.</p>
+                <div style="margin-top: 1.5rem;">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fa-solid fa-house"></i> Return Home
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            {% block content %}{% endblock %}
+        {% endif %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <h3>Nandha Engineering College</h3>
+                    <p>Autonomous Institution | Affiliated to Anna University | Erode, Tamil Nadu</p>
+                    <p class="tagline">Grievance Redressal & Student Complaint Management System</p>
+                </div>
+                <div class="footer-meta">
+                    <span class="badge-status-neutral"><i class="fa-solid fa-lock"></i> Encrypted SQLite Database</span>
+                    <span class="badge-status-neutral"><i class="fa-solid fa-bolt"></i> Python Flask Web Engine</span>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Nandha Engineering College. All rights reserved. Designed for College Project Based Learning (PBL).</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core Script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

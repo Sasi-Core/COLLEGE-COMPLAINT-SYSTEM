@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Nandha Engineering College Complaint System{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <!-- Institution Header -->
+        <div class="auth-header">
+            <div class="auth-badge-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h1 class="auth-title">Nandha Engineering College</h1>
+            <h2 class="auth-subtitle">College Complaint System</h2>
+            <p class="auth-desc">Welcome to the student grievance redressal portal. Please sign in to lodge or review complaints.</p>
+        </div>
+
+        <!-- Role Selector Tabs -->
+        <div class="tab-container">
+            <button type="button" class="tab-btn {% if active_tab != 'admin' %}active{% endif %}" id="studentTabBtn" onclick="switchLoginTab('student')">
+                <i class="fa-solid fa-user-graduate"></i> Student Login
+            </button>
+            <button type="button" class="tab-btn {% if active_tab == 'admin' %}active{% endif %}" id="adminTabBtn" onclick="switchLoginTab('admin')">
+                <i class="fa-solid fa-user-shield"></i> Admin Login
+            </button>
+        </div>
+
+        <!-- Student Login Form -->
+        <form id="studentLoginForm" class="auth-form {% if active_tab == 'admin' %}hidden{% endif %}" method="POST" action="{{ url_for('login') }}">
+            <input type="hidden" name="login_type" value="student">
+            
+            <div class="form-group">
+                <label for="student_id" class="form-label">
+                    <i class="fa-solid fa-id-card"></i> Student ID / Roll Number
+                </label>
+                <div class="input-wrapper">
+                    <input type="text" id="student_id" name="student_id" class="form-control" placeholder="e.g. STU001" value="{{ student_id if student_id else '' }}" required autofocus>
+                </div>
+                <small class="form-hint">Enter your official registered College Student ID</small>
+            </div>
+
+            <div class="form-group">
+                <label for="student_password" class="form-label">
+                    <i class="fa-solid fa-lock"></i> Password
+                </label>
+                <div class="input-wrapper password-input-wrap">
+                    <input type="password" id="student_password" name="password" class="form-control" placeholder="Enter your password" required>
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('student_password', this)">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In as Student
+            </button>
+        </form>
+
+        <!-- Admin Login Form -->
+        <form id="adminLoginForm" class="auth-form {% if active_tab != 'admin' %}hidden{% endif %}" method="POST" action="{{ url_for('login') }}">
+            <input type="hidden" name="login_type" value="admin">
+
+            <div class="form-group">
+                <label for="admin_username" class="form-label">
+                    <i class="fa-solid fa-shield-halved"></i> Admin Username
+                </label>
+                <div class="input-wrapper">
+                    <input type="text" id="admin_username" name="username" class="form-control" placeholder="e.g. admin" value="{{ username if username else '' }}" required>
+                </div>
+                <small class="form-hint">Staff or Administration login portal</small>
+            </div>
+
+            <div class="form-group">
+                <label for="admin_password" class="form-label">
+                    <i class="fa-solid fa-lock"></i> Password
+                </label>
+                <div class="input-wrapper password-input-wrap">
+                    <input type="password" id="admin_password" name="password" class="form-control" placeholder="Enter admin password" required>
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('admin_password', this)">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-admin-accent">
+                <i class="fa-solid fa-shield"></i> Sign In as Administrator
+            </button>
+        </form>
+
+        <!-- Demo Credentials Helper Card -->
+        <div class="demo-credentials-card">
+            <div class="demo-header">
+                <i class="fa-solid fa-key"></i>
+                <span>Demo Accounts for Testing & Evaluation</span>
+            </div>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <div class="demo-role"><i class="fa-solid fa-user-graduate"></i> Student Account</div>
+                    <div class="demo-details">
+                        <span><strong>ID:</strong> <code>STU001</code></span>
+                        <span><strong>PW:</strong> <code>student123</code></span>
+                    </div>
+                    <button type="button" class="btn-autofill" onclick="autoFillCredentials('student', 'STU001', 'student123')">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Student
+                    </button>
+                </div>
+
+                <div class="demo-item">
+                    <div class="demo-role"><i class="fa-solid fa-user-shield"></i> Admin Account</div>
+                    <div class="demo-details">
+                        <span><strong>User:</strong> <code>admin</code></span>
+                        <span><strong>PW:</strong> <code>admin123</code></span>
+                    </div>
+                    <button type="button" class="btn-autofill" onclick="autoFillCredentials('admin', 'admin', 'admin123')">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

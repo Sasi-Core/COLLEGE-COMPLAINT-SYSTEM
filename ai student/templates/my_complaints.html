@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}My Complaints - Nandha Engineering College{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-bar">
+    <a href="{{ url_for('student_dashboard') }}"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <i class="fa-solid fa-chevron-right separator"></i>
+    <span>My Complaints</span>
+</div>
+
+<div class="page-header-row">
+    <div>
+        <h1 class="page-title"><i class="fa-solid fa-clipboard-list"></i> My Grievances</h1>
+        <p class="page-subtitle">Track the real-time progress and official admin responses for all your submitted complaints.</p>
+    </div>
+    <a href="{{ url_for('submit_complaint') }}" class="btn btn-gold">
+        <i class="fa-solid fa-plus"></i> Submit New Complaint
+    </a>
+</div>
+
+<!-- Status Filter Chips -->
+<div class="filter-chips-bar">
+    <a href="{{ url_for('my_complaints') }}" class="filter-chip {% if not current_filter %}active{% endif %}">
+        All Complaints
+    </a>
+    <a href="{{ url_for('my_complaints', status='Pending') }}" class="filter-chip chip-pending {% if current_filter == 'Pending' %}active{% endif %}">
+        <i class="fa-solid fa-hourglass-half"></i> Pending
+    </a>
+    <a href="{{ url_for('my_complaints', status='In Progress') }}" class="filter-chip chip-progress {% if current_filter == 'In Progress' %}active{% endif %}">
+        <i class="fa-solid fa-screwdriver-wrench"></i> In Progress
+    </a>
+    <a href="{{ url_for('my_complaints', status='Resolved') }}" class="filter-chip chip-resolved {% if current_filter == 'Resolved' %}active{% endif %}">
+        <i class="fa-solid fa-circle-check"></i> Resolved
+    </a>
+    <a href="{{ url_for('my_complaints', status='Rejected') }}" class="filter-chip chip-rejected {% if current_filter == 'Rejected' %}active{% endif %}">
+        <i class="fa-solid fa-ban"></i> Rejected
+    </a>
+</div>
+
+<!-- Complaints Container -->
+<div class="card">
+    {% if complaints %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Complaint ID</th>
+                        <th>Title & Department</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Submitted On</th>
+                        <th>Status</th>
+                        <th class="text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('complaint_details', complaint_id=c['complaint_id']) }}" class="id-link">
+                                    <strong>{{ c['complaint_id'] }}</strong>
+                                </a>
+                            </td>
+                            <td>
+                                <div class="complaint-title-cell">
+                                    <a href="{{ url_for('complaint_details', complaint_id=c['complaint_id']) }}" class="table-title-link">
+                                        {{ c['title'] }}
+                                    </a>
+                                    <span class="cell-sub"><i class="fa-solid fa-building"></i> {{ c['department'] }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="category-pill">{{ c['category'] }}</span>
+                            </td>
+                            <td>
+                                <span class="badge-priority badge-priority-{{ c['priority']|lower }}">
+                                    {{ c['priority'] }}
+                                </span>
+                            </td>
+                            <td class="text-muted text-sm">
+                                <div>{{ c['created_at'][:10] }}</div>
+                                <small class="text-xs">{{ c['created_at'][11:16] }}</small>
+                            </td>
+                            <td>
+                                <span class="badge-status badge-status-{{ c['status']|lower|replace(' ', '-') }}">
+                                    <i class="fa-solid fa-circle status-dot"></i> {{ c['status'] }}
+                                </span>
+                                {% if c['admin_response'] %}
+                                    <div class="badge-admin-note" title="Official admin response provided">
+                                        <i class="fa-solid fa-comment-dots"></i> Admin Replied
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="text-right">
+                                <a href="{{ url_for('complaint_details', complaint_id=c['complaint_id']) }}" class="btn btn-sm btn-outline">
+                                    <i class="fa-regular fa-eye"></i> Details
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-inbox"></i></div>
+            <h3>No complaints found</h3>
+            <p>
+                {% if current_filter %}
+                    There are no complaints matching status "<strong>{{ current_filter }}</strong>".
+                {% else %}
+                    You have not registered any grievances yet.
+                {% endif %}
+            </p>
+            <div style="margin-top: 1rem;">
+                {% if current_filter %}
+                    <a href="{{ url_for('my_complaints') }}" class="btn btn-secondary">
+                        <i class="fa-solid fa-filter-circle-xmark"></i> Clear Filter
+                    </a>
+                {% endif %}
+                <a href="{{ url_for('submit_complaint') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Submit Complaint
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

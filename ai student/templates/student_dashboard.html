@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - Nandha Engineering College{% endblock %}
+
+{% block content %}
+<div class="dashboard-header-banner">
+    <div class="banner-content">
+        <div class="welcome-chip">
+            <i class="fa-solid fa-graduation-cap"></i> Student Grievance Portal
+        </div>
+        <h1 class="page-title">Welcome back, {{ session.get('name') }}!</h1>
+        <p class="page-subtitle">
+            Roll / Student ID: <strong>{{ session.get('student_id') }}</strong> &bull; Department: <strong>{{ session.get('department') }}</strong>
+        </p>
+    </div>
+    <div class="banner-actions">
+        <a href="{{ url_for('submit_complaint') }}" class="btn btn-gold btn-lg">
+            <i class="fa-solid fa-circle-plus"></i> Submit New Complaint
+        </a>
+        <a href="{{ url_for('my_complaints') }}" class="btn btn-secondary btn-lg">
+            <i class="fa-solid fa-clock-rotate-left"></i> Track Complaints
+        </a>
+    </div>
+</div>
+
+<!-- Metrics Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-primary">
+            <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ total }}</span>
+            <span class="stat-label">Total Complaints</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-warning">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ pending }}</span>
+            <span class="stat-label">Pending Review</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-info">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ in_progress }}</span>
+            <span class="stat-label">In Progress</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-success">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ resolved }}</span>
+            <span class="stat-label">Resolved</span>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions & Recent Complaints -->
+<div class="content-row">
+    <div class="content-col-main">
+        <div class="card">
+            <div class="card-header flex-between">
+                <div>
+                    <h2 class="card-title"><i class="fa-solid fa-list-check"></i> Recent Complaints</h2>
+                    <p class="card-subtitle">Showing your recently submitted grievances</p>
+                </div>
+                <a href="{{ url_for('my_complaints') }}" class="link-more">
+                    View All ({{ total }}) <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            {% if recent_complaints %}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Complaint ID</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Priority</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for comp in recent_complaints %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('complaint_details', complaint_id=comp['complaint_id']) }}" class="id-link">
+                                            <strong>{{ comp['complaint_id'] }}</strong>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="truncate-title" title="{{ comp['title'] }}">
+                                            {{ comp['title'] }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="category-pill">{{ comp['category'] }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-priority badge-priority-{{ comp['priority']|lower }}">
+                                            {{ comp['priority'] }}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted text-sm">
+                                        {{ comp['created_at'][:10] }}
+                                    </td>
+                                    <td>
+                                        <span class="badge-status badge-status-{{ comp['status']|lower|replace(' ', '-') }}">
+                                            <i class="fa-solid fa-circle status-dot"></i> {{ comp['status'] }}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        <a href="{{ url_for('complaint_details', complaint_id=comp['complaint_id']) }}" class="btn btn-sm btn-outline">
+                                            <i class="fa-regular fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fa-regular fa-folder-open"></i></div>
+                    <h3>No complaints submitted yet</h3>
+                    <p>Have an issue regarding academics, infrastructure, or campus facilities? Lodge your complaint now.</p>
+                    <a href="{{ url_for('submit_complaint') }}" class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fa-solid fa-plus"></i> Submit First Complaint
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar Guidelines -->
+    <div class="content-col-side">
+        <div class="card guidance-card">
+            <h3 class="card-title"><i class="fa-solid fa-circle-info"></i> Grievance Redressal Flow</h3>
+            <ul class="process-steps">
+                <li>
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        <strong>Lodge Complaint</strong>
+                        <span>Provide specific details, location, and department.</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        <strong>Review & Assign</strong>
+                        <span>College administrator forwards it to the concerned division.</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        <strong>Resolution & Update</strong>
+                        <span>Status turns to 'Resolved' with official remarks.</span>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="emergency-contact-box">
+                <h4><i class="fa-solid fa-headset"></i> Immediate Assistance</h4>
+                <p>Campus Admin Cell: <strong>+91 4294 225585</strong></p>
+                <p>Email: <strong>grievance@nandhaengg.org</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

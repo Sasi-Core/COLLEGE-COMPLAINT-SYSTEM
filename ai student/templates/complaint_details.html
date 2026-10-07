@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint {{ complaint['complaint_id'] }} - Nandha Engineering College{% endblock %}
+
+{% block content %}
+<div class="breadcrumb-bar">
+    {% if session.get('role') == 'admin' %}
+        <a href="{{ url_for('admin_dashboard') }}"><i class="fa-solid fa-house"></i> Admin Console</a>
+    {% else %}
+        <a href="{{ url_for('student_dashboard') }}"><i class="fa-solid fa-house"></i> Dashboard</a>
+        <i class="fa-solid fa-chevron-right separator"></i>
+        <a href="{{ url_for('my_complaints') }}">My Complaints</a>
+    {% endif %}
+    <i class="fa-solid fa-chevron-right separator"></i>
+    <span>{{ complaint['complaint_id'] }}</span>
+</div>
+
+<!-- Header Card -->
+<div class="detail-header-card">
+    <div class="detail-header-main">
+        <div class="detail-id-tag">
+            <span>Complaint ID:</span>
+            <h1>{{ complaint['complaint_id'] }}</h1>
+        </div>
+        <div class="detail-header-badges">
+            <span class="badge-status badge-status-{{ complaint['status']|lower|replace(' ', '-') }} badge-lg">
+                <i class="fa-solid fa-circle status-dot"></i> {{ complaint['status'] }}
+            </span>
+            <span class="badge-priority badge-priority-{{ complaint['priority']|lower }} badge-lg">
+                <i class="fa-solid fa-flag"></i> {{ complaint['priority'] }} Priority
+            </span>
+        </div>
+    </div>
+    <div class="detail-header-meta">
+        <span><i class="fa-regular fa-calendar-plus"></i> Filed: <strong>{{ complaint['created_at'] }}</strong></span>
+        <span><i class="fa-solid fa-clock-rotate-left"></i> Last Updated: <strong>{{ complaint['updated_at'] }}</strong></span>
+    </div>
+</div>
+
+<!-- Grievance Progress Stepper -->
+<div class="card stepper-card">
+    <div class="status-stepper">
+        <div class="step-item step-completed">
+            <div class="step-circle"><i class="fa-solid fa-check"></i></div>
+            <div class="step-label">Submitted</div>
+            <div class="step-time">{{ complaint['created_at'][:10] }}</div>
+        </div>
+        <div class="step-line {% if complaint['status'] in ['In Progress', 'Resolved', 'Rejected'] %}line-active{% endif %}"></div>
+
+        <div class="step-item {% if complaint['status'] in ['In Progress', 'Resolved', 'Rejected'] %}step-completed{% else %}step-pending{% endif %}">
+            <div class="step-circle">
+                {% if complaint['status'] in ['In Progress', 'Resolved', 'Rejected'] %}
+                    <i class="fa-solid fa-check"></i>
+                {% else %}
+                    2
+                {% endif %}
+            </div>
+            <div class="step-label">Under Investigation</div>
+            <div class="step-time">{% if complaint['status'] in ['In Progress', 'Resolved', 'Rejected'] %}Active{% else %}Awaiting Review{% endif %}</div>
+        </div>
+        <div class="step-line {% if complaint['status'] in ['Resolved', 'Rejected'] %}line-active{% endif %}"></div>
+
+        <div class="step-item {% if complaint['status'] == 'Resolved' %}step-completed-success{% elif complaint['status'] == 'Rejected' %}step-completed-danger{% else %}step-pending{% endif %}">
+            <div class="step-circle">
+                {% if complaint['status'] == 'Resolved' %}
+                    <i class="fa-solid fa-circle-check"></i>
+                {% elif complaint['status'] == 'Rejected' %}
+                    <i class="fa-solid fa-ban"></i>
+                {% else %}
+                    3
+                {% endif %}
+            </div>
+            <div class="step-label">
+                {% if complaint['status'] == 'Rejected' %}Rejected{% else %}Resolved{% endif %}
+            </div>
+            <div class="step-time">
+                {% if complaint['status'] in ['Resolved', 'Rejected'] %}{{ complaint['updated_at'][:10] }}{% else %}Final Outcome{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Grid -->
+<div class="content-row">
+    <!-- Main Complaint Details -->
+    <div class="content-col-main">
+        <div class="card">
+            <div class="card-header border-bottom">
+                <h2 class="card-title"><i class="fa-solid fa-circle-info"></i> Grievance Information</h2>
+            </div>
+            <div class="card-body">
+                <div class="detail-field">
+                    <span class="field-label">Subject / Title:</span>
+                    <h3 class="field-value-title">{{ complaint['title'] }}</h3>
+                </div>
+
+                <div class="detail-meta-grid">
+                    <div class="meta-item">
+                        <span class="field-label">Category:</span>
+                        <span class="category-pill">{{ complaint['category'] }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="field-label">Concerned Department:</span>
+                        <span class="field-value-text"><i class="fa-solid fa-building"></i> {{ complaint['department'] }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="field-label">Priority:</span>
+                        <span class="badge-priority badge-priority-{{ complaint['priority']|lower }}">
+                            {{ complaint['priority'] }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="detail-field" style="margin-top: 1.5rem;">
+                    <span class="field-label">Detailed Description:</span>
+                    <div class="description-box">
+                        {{ complaint['description'] }}
+                    </div>
+                </div>
+
+                <!-- Attachment Section -->
+                {% if complaint['attachment'] %}
+                    <div class="detail-field" style="margin-top: 1.5rem;">
+                        <span class="field-label"><i class="fa-solid fa-paperclip"></i> Attached Supporting Document / Media:</span>
+                        <div class="attachment-box">
+                            <div class="attachment-info">
+                                <i class="fa-solid fa-file-lines attachment-icon"></i>
+                                <div>
+                                    <span class="attachment-name">{{ complaint['attachment'] }}</span>
+                                    <small class="text-muted">Uploaded on submission</small>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('uploaded_file', filename=complaint['attachment']) }}" target="_blank" class="btn btn-sm btn-outline">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> View / Download
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Official Administration Response Card -->
+        <div class="card admin-response-display-card">
+            <div class="card-header border-bottom flex-between">
+                <h3 class="card-title">
+                    <i class="fa-solid fa-shield-halved text-primary"></i> Official Administration Resolution Remarks
+                </h3>
+                <span class="badge-status-neutral">Grievance Cell</span>
+            </div>
+            <div class="card-body">
+                {% if complaint['admin_response'] %}
+                    <div class="admin-response-quote">
+                        <i class="fa-solid fa-quote-left quote-icon"></i>
+                        <p class="response-text">{{ complaint['admin_response'] }}</p>
+                        <div class="response-timestamp">
+                            <i class="fa-solid fa-clock"></i> Recorded on {{ complaint['updated_at'] }}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-response-notice">
+                        <i class="fa-regular fa-hourglass-half"></i>
+                        <p>No administrative resolution remarks have been provided yet. The concerned authority is currently reviewing this matter.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar: Student Profile & Admin Action Controls -->
+    <div class="content-col-side">
+        <!-- Student Details Card -->
+        <div class="card">
+            <div class="card-header border-bottom">
+                <h3 class="card-title"><i class="fa-solid fa-user-graduate"></i> Complainant Details</h3>
+            </div>
+            <div class="card-body">
+                <div class="student-profile-item">
+                    <span class="meta-label">Student Name:</span>
+                    <strong class="meta-val">{{ complaint['student_name'] }}</strong>
+                </div>
+                <div class="student-profile-item">
+                    <span class="meta-label">Student ID / Roll No:</span>
+                    <strong class="meta-val"><code>{{ complaint['student_reg_id'] }}</code></strong>
+                </div>
+                <div class="student-profile-item">
+                    <span class="meta-label">Branch / Department:</span>
+                    <span class="meta-val">{{ complaint['student_dept'] }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- If Admin: Show Management Form -->
+        {% if session.get('role') == 'admin' %}
+            <div class="card admin-control-card">
+                <div class="card-header border-bottom">
+                    <h3 class="card-title"><i class="fa-solid fa-gear"></i> Admin Status & Action</h3>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('update_complaint_status', complaint_id=complaint['complaint_id']) }}" method="POST">
+                        <div class="form-group">
+                            <label for="status_select" class="form-label required">Update Status:</label>
+                            <select name="status" id="status_select" class="form-select" required>
+                                <option value="Pending" {% if complaint['status'] == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="In Progress" {% if complaint['status'] == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                <option value="Resolved" {% if complaint['status'] == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="Rejected" {% if complaint['status'] == 'Rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="admin_response_text" class="form-label">Official Response / Action Taken:</label>
+                            <textarea name="admin_response" id="admin_response_text" rows="4" class="form-control" placeholder="Explain the resolution, corrective action taken, or reason for decision...">{{ complaint['admin_response'] or '' }}</textarea>
+                            <small class="form-hint">This response will be visible to the student immediately.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-floppy-disk"></i> Save & Update Status
+                        </button>
+                    </form>
+
+                    <hr class="divider">
+
+                    <!-- Delete Complaint Form -->
+                    <form action="{{ url_for('delete_complaint', complaint_id=complaint['complaint_id']) }}" method="POST" onsubmit="return confirmDelete('{{ complaint['complaint_id'] }}');">
+                        <button type="submit" class="btn btn-danger-outline btn-block btn-sm">
+                            <i class="fa-regular fa-trash-can"></i> Delete Complaint Record
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+
+        <div style="margin-top: 1rem;">
+            {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-block">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Admin Console
+                </a>
+            {% else %}
+                <a href="{{ url_for('my_complaints') }}" class="btn btn-secondary btn-block">
+                    <i class="fa-solid fa-arrow-left"></i> Back to My Complaints
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

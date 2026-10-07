@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Nandha Engineering College{% endblock %}
+
+{% block content %}
+<div class="dashboard-header-banner admin-banner">
+    <div class="banner-content">
+        <div class="welcome-chip admin-chip">
+            <i class="fa-solid fa-shield-halved"></i> Campus Administrative Command Console
+        </div>
+        <h1 class="page-title">Complaint Management Center</h1>
+        <p class="page-subtitle">
+            Officer: <strong>{{ session.get('name') }}</strong> &bull; Portal: <strong>Nandha Engineering College Grievance Cell</strong>
+        </p>
+    </div>
+    <div class="banner-actions">
+        <span class="live-clock-badge">
+            <i class="fa-regular fa-clock"></i> <span id="portalClock">System Active</span>
+        </span>
+    </div>
+</div>
+
+<!-- Admin Metrics Summary Grid -->
+<div class="stats-grid stats-grid-5">
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-primary">
+            <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ total }}</span>
+            <span class="stat-label">Total Received</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-warning">
+            <i class="fa-solid fa-hourglass-half"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ pending }}</span>
+            <span class="stat-label">Pending</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-info">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ in_progress }}</span>
+            <span class="stat-label">In Progress</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-success">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ resolved }}</span>
+            <span class="stat-label">Resolved</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-danger">
+            <i class="fa-solid fa-ban"></i>
+        </div>
+        <div class="stat-data">
+            <span class="stat-number">{{ rejected }}</span>
+            <span class="stat-label">Rejected</span>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filtering Toolbar -->
+<div class="card filter-card">
+    <form method="GET" action="{{ url_for('admin_dashboard') }}" class="filter-form">
+        <div class="filter-row">
+            <!-- Search Query -->
+            <div class="filter-field search-field">
+                <label for="search" class="filter-label"><i class="fa-solid fa-magnifying-glass"></i> Search</label>
+                <div class="search-input-wrap">
+                    <input type="text" id="search" name="search" class="form-control" placeholder="Search by Complaint ID, Title, Student Name or ID..." value="{{ current_search }}">
+                </div>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-field">
+                <label for="status" class="filter-label"><i class="fa-solid fa-signal"></i> Status</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if current_status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="In Progress" {% if current_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Resolved" {% if current_status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="Rejected" {% if current_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="filter-field">
+                <label for="category" class="filter-label"><i class="fa-solid fa-tags"></i> Category</label>
+                <select id="category" name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="filter-field">
+                <label for="priority" class="filter-label"><i class="fa-solid fa-flag"></i> Priority</label>
+                <select id="priority" name="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    {% for p in priorities %}
+                        <option value="{{ p }}" {% if current_priority == p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Department Filter -->
+            <div class="filter-field">
+                <label for="department" class="filter-label"><i class="fa-solid fa-building"></i> Department</label>
+                <select id="department" name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept }}" {% if current_department == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary" title="Apply filter">
+                    <i class="fa-solid fa-filter"></i> Apply
+                </button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary" title="Reset all filters">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> Reset
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Main Complaints Data Table Card -->
+<div class="card">
+    <div class="card-header border-bottom flex-between">
+        <div>
+            <h2 class="card-title"><i class="fa-solid fa-table-list"></i> Complaints Registry</h2>
+            <p class="card-subtitle">
+                Displaying <strong>{{ complaints|length }}</strong> record(s)
+                {% if current_search or current_status or current_category or current_priority or current_department %}
+                    (Filtered view)
+                {% endif %}
+            </p>
+        </div>
+        <div class="export-placeholder">
+            <span class="badge-status-neutral"><i class="fa-solid fa-database"></i> SQLite Database</span>
+        </div>
+    </div>
+
+    {% if complaints %}
+        <div class="table-responsive">
+            <table class="data-table admin-table">
+                <thead>
+                    <tr>
+                        <th>Complaint ID</th>
+                        <th>Student Info</th>
+                        <th>Complaint Title & Dept</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th class="text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('complaint_details', complaint_id=c['complaint_id']) }}" class="id-link">
+                                    <strong>{{ c['complaint_id'] }}</strong>
+                                </a>
+                                {% if c['attachment'] %}
+                                    <div class="has-attachment-indicator" title="Has file attachment">
+                                        <i class="fa-solid fa-paperclip"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="student-info-cell">
+                                    <strong>{{ c['student_name'] }}</strong>
+                                    <span class="text-muted text-xs"><code>{{ c['student_id'] }}</code></span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="complaint-title-cell">
+                                    <a href="{{ url_for('complaint_details', complaint_id=c['complaint_id']) }}" class="table-title-link">
+                                        {{ c['title'] }}
+                                    </a>
+                                    <span class="cell-sub"><i class="fa-solid fa-building"></i> {{ c['department'] }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="category-pill">{{ c['category'] }}</span>
+                            </td>
+                            <td>
+                                <span class="badge-priority badge-priority-{{ c['priority']|lower }}">
+                                    {{ c['priority'] }}
+                                </span>
+                            </td>
+                            <td class="text-muted text-sm">
+                                <div>{{ c['created_at'][:10] }}</div>
+                                <small class="text-xs">{{ c['created_at'][11:16] }}</small>
+                            </td>
+                            <td>
+                                <span class="badge-status badge-status-{{ c['status']|lower|replace(' ', '-') }}">
+                                    <i class="fa-solid fa-circle status-dot"></i> {{ c['status'] }}
+                                </span>
+                                {% if c['admin_response'] %}
+                                    <div class="badge-admin-note" title="Resolution response given">
+                                        <i class="fa-solid fa-comment-check"></i> Replied
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="text-right">
+                                <div class="btn-group-action">
+                                    <a href="{{ url_for('complaint_details', complaint_id=c['complaint_id']) }}" class="btn btn-sm btn-primary" title="Open and manage complaint">
+                                        <i class="fa-regular fa-folder-open"></i> Manage
+                                    </a>
+                                    <form action="{{ url_for('delete_complaint', complaint_id=c['complaint_id']) }}" method="POST" class="inline-form" onsubmit="return confirmDelete('{{ c['complaint_id'] }}');">
+                                        <button type="submit" class="btn btn-sm btn-danger-icon" title="Delete complaint">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h3>No matching complaints found</h3>
+            <p>Try refining your search terms or clearing one or more active filters.</p>
+            <div style="margin-top: 1rem;">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> Reset All Filters
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
